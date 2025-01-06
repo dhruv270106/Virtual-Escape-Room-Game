@@ -3,22 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Escape Room</title>
-    <link rel="stylesheet" href="game.css">
+    <title>Brain Test Style Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .question-box {
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .option:hover {
+            background-color: #0056b3;
+        }
+
+        .question-image {
+            max-width: 100%;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        #feedback {
+            font-size: 18px;
+            margin-top: 20px;
+            color: green;
+        }
+
+        #feedback.wrong {
+            color: red;
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <h1>Virtual Escape Room</h1>
-        <div id="story">
-            <p>You find yourself locked in a mysterious room. Solve the puzzles to escape!</p>
+    <div class="container">
+        <h1>Brain Test Style Game</h1>
+        <div id="game-box">
+            <div class="question-box">
+                <h2 id="question">Loading question...</h2>
+                <img id="question-image" src="" alt="" class="question-image" />
+                <div class="options">
+                    <button class="option" id="optionA">Option A</button>
+                    <button class="option" id="optionB">Option B</button>
+                    <button class="option" id="optionC">Option C</button>
+                    <button class="option" id="optionD">Option D</button>
+                </div>
+                <div id="feedback"></div>
+            </div>
         </div>
-        <div id="puzzle">
-            <!-- Puzzle will be dynamically loaded here -->
-        </div>
-        <div id="message"></div>
-        <input type="text" id="answer" placeholder="Enter your answer">
-        <button id="submit-button">Submit Answer</button>
     </div>
-    <script src="game.js"></script>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let questions = [];
+    
+        // DOM elements
+        const questionElement = document.getElementById("question");
+        const optionsButtons = document.querySelectorAll(".option");
+        const questionImage = document.getElementById("question-image");
+        const feedbackElement = document.getElementById("feedback");
+    
+        // Fetch questions from the JSON file
+        async function fetchQuestions() {
+            try {
+                const response = await fetch("questions.json");
+                questions = await response.json();
+                shuffleQuestions(); // Shuffle questions
+                loadQuestion();
+            } catch (error) {
+                console.error("Error loading questions:", error);
+            }
+        }
+    
+        // Shuffle questions randomly
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+    
+        // Load a question
+        function loadQuestion() {
+            feedbackElement.textContent = "";
+            feedbackElement.className = "";
+    
+            const currentQuestion = questions[currentQuestionIndex];
+            questionElement.textContent = currentQuestion.question;
+            questionImage.src = currentQuestion.image; // Display image related to the question
+            optionsButtons.forEach((button, index) => {
+                button.textContent = currentQuestion.options[index];
+                button.onclick = () => checkAnswer(button.textContent);
+            });
+        }
+        
+    
+        // Check the answer
+        function checkAnswer(selectedOption) {
+            const currentQuestion = questions[currentQuestionIndex];
+            if (selectedOption === currentQuestion.answer) {
+                feedbackElement.textContent = "Correct Answer!";
+                feedbackElement.className = "correct";
+            } else {
+                feedbackElement.textContent = `Wrong Answer! The correct answer was ${currentQuestion.answer}.`;
+                feedbackElement.className = "wrong";
+            }
+            setTimeout(nextQuestion, 2000);
+        }
+    
+        // Load the next question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                questionElement.textContent = "Congratulations! You have completed the game.";
+                questionImage.style.display = "none";
+                document.querySelector(".options").style.display = "none";
+            }
+        }
+    
+        // Start the game
+        fetchQuestions();
+    </script>
 </body>
 </html>
